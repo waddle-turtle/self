@@ -2,6 +2,7 @@ import json
 import os
 import sys
 from datetime import datetime, timedelta, timezone
+import google.generativeai as genai
 
 import pygsheets
 from flask import Flask, request
@@ -154,8 +155,10 @@ class BotOperation:
         
 
         
-        # 寫入資料
-        self.wks.append_table(values=content)
+        # 寫入資料 (繞過 append_table 的 Bug)
+        all_rows = self._get_all_values()
+        next_row_index = len(all_rows) + 1
+        self.wks.update_values(f"A{next_row_index}", content)
         
         # 更新總和
         current_total = float(self.wks.cell("G1").value or 0)
@@ -423,6 +426,8 @@ class BotOperation:
 
     def method(self):
         content = (
+            "'AI輔助記帳支援中'\n"
+            "不需要死背格式！日常對話即可自動判別：\n"
             "read: 讀取資料（顯示索引）\n"
             "display: 完整表單\n"
             "write 名字 品項 分類 金額(記得空格): 記帳\n"
@@ -505,8 +510,58 @@ class BotOperation:
                 self.method()
                 print("查詢指令")
             case _:
-                self.api.reply_message(self.tk, TextSendMessage(text="不支援的指令"))
+                # ===== AI 大腦接管區 =====
+                try:
+                    # 1. 喚醒 Gemini API
+                    genai.configure(api_key=self.config.GEMINI_API_KEY)
+                    # 使用最新的 flash 模型，反應最快
+                    model = genai.GenerativeModel('gemini-3.5-flash') 
+                    
+                    # 2. 設計 System Prompt (提示詞工程)
+                    # 2. 設計升級版 System Prompt (多筆連鎖辨識)
+                    prompt = f"""
+                    你現在是一個超級聰明的多筆記帳助理。你的任務是從使用者的日常對話中，精準擷取出「所有」記帳資訊。
+                    不管使用者講了幾筆花費，你都必須「嚴格」將它們轉換成以下單一行的多筆指令格式（多筆之間請用 / 隔開，write 跟名字只要在最開頭寫一次）：
+                    write 名字 品項1 分類1 金額1/品項2 分類2 金額2/品項3 分類3 金額3...
 
+                    【轉換規則】：
+                    1. 分類只能從這裡挑選最適合的：飲食、交通、娛樂、購物、居住、醫療、其他。
+                    2. 如果使用者沒有說名字（例如只說「買了」、「吃了」），名字一律填寫為「我」。
+                    3. 金額前面如果使用者有打品項，記得把品項跟金額拆開。
+                    4. 請只輸出轉換後的單行指令結果，絕對不要包含任何解釋、標點符號或廢話。
+                    5. 如果使用者的話完全跟記帳無關（例如聊天、打招呼），請用繁體中文親切回應他。
+
+                    【學習範例】：
+                    使用者：我今天吃了200塊的便當
+                    回答：write 我 便當 飲食 200
+
+                    使用者：200的便當80的紅茶 40針線 150的手機
+                    回答：write 我 便當 飲食 200/紅茶 飲食 80/針線 購物 40/手機 購物 150
+
+                    使用者：小美買了100甜甜圈和50奶茶
+                    回答：write 小美 甜甜圈 飲食 100/奶茶 飲食 50
+
+                    現在，請處理這句使用者的最新對話：「{self.msg}」
+                    """
+                    
+                    # 3. 把組好的 prompt 丟給 AI 思考
+                    response = model.generate_content(prompt)
+                    ai_result = response.text.strip()
+                    
+                    print(f"[AI 處理中] 原始輸入: {self.msg}  --->  轉換結果: {ai_result}")
+                    
+                    # 4. 判斷 AI 的結果：是指令就執行，是閒聊就直接回覆
+                    if ai_result.startswith("write "):
+                        self.msg = ai_result  # 把大腦轉換好的完美格式，蓋掉使用者原本的碎碎念
+                        self.write()          # 直接呼叫你剛剛改好 Bug 的寫入函式！
+                        print("✨ AI 輔助記帳成功！")
+                    else:
+                        # 這是閒聊，直接把 AI 的回話傳給 LINE
+                        self.api.reply_message(self.tk, TextSendMessage(text=ai_result))
+                        
+                except Exception as e:
+                    print(f"Gemini 大腦當機了: {e}")
+                    self.api.reply_message(self.tk, TextSendMessage(text="AI 助理大腦暫時連線失敗，請稍後再試！"))
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))

@@ -13,3 +13,4 @@ class Config: # 必須是全大寫
     GSPREADSHEET = os.getenv("GSPREADSHEET", "linebot_expense")
     GWORKSHEET = os.getenv("GWORKSHEET", "expense")
     THRESHOLD_AMOUNT = int(os.getenv("THRESHOLD_AMOUNT", "6000"))
+    GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")

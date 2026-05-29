@@ -1,19 +1,16 @@
-.DS_Store
-_old/
-.venv/
-linebot_app/config.py
-*.json
+# 系統與編譯產生的垃圾檔案
 __pycache__/
-.env
-.env.*
-!.env.example
+*.py[cod]
+.DS_Store
+Thumbs.db
 
-# Testing
-.pytest_cache/
-.tox/
-*.egg-info/
-dist/
-build/
-_test_guide/
-.coverage
-coverage.xml
+# 機密資訊
+.env
+*.json
+
+# 本地開發用執行檔與環境
+ngrok
+ngrok.exe
+venv/
+.venv/
+env/
