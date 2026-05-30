@@ -12,8 +12,11 @@ from linebot.models import TextSendMessage
 from linebot_app.config import Config
 
 app = Flask(__name__)
-@app.route("/", methods=["POST"])
+# 修改你的 route，同時允許 GET 和 POST
+@app.route("/", methods=["GET", "POST"])
 def callback():
+    if request.method == 'GET':
+        return "Line Bot is running!", 200  # 讓 LINE Verify 可以抓到 200 OK
     return linebot(request)
 
 def linebot(request):
