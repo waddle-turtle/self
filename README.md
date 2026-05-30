@@ -1,3 +1,6 @@
+#參考並增加了新功能
+
+
 # Accounting LineBot - Line記帳機器人
 
 >* 這是一個用 Python Flask、串接 LineBot API (Webhook)、連結 Google Sheet 並部署在 GCP 的記帳機器人
