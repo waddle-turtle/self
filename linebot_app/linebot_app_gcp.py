@@ -3,8 +3,6 @@ import os
 import sys
 from datetime import datetime, timedelta, timezone
 import google.generativeai as genai
-import logging
-logging.basicConfig(level=logging.DEBUG)
 
 import pygsheets
 from flask import Flask, request
@@ -17,7 +15,8 @@ app = Flask(__name__)
 # 修改你的 route，同時允許 GET 和 POST
 @app.route("/", methods=["GET", "POST"])
 def callback():
-    app.logger.info("LINE 請求進來了！")  # 強制觸發 Flask 內建的 Log
+    if request.method == 'GET':
+        return "Line Bot is running!", 200  # 讓 LINE Verify 可以抓到 200 OK
     return linebot(request)
 
 def linebot(request):
