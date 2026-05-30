@@ -50,3 +50,4 @@ wrapt==1.17.3
 yarl==1.22.0
 python-dotenv==1.0.0
 google-generativeai
+gunicorn
