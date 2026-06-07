@@ -518,7 +518,7 @@ class BotOperation:
                     # 1. 喚醒 Gemini API
                     genai.configure(api_key=self.config.GEMINI_API_KEY)
                     # 使用最新的 flash 模型，反應最快
-                    model = genai.GenerativeModel('gemini-3.5-flash') 
+                    model = genai.GenerativeModel('gemini-2.5-flash') 
                     
                     # 2. 設計 System Prompt (提示詞工程)
                     # 2. 設計升級版 System Prompt (多筆連鎖辨識)
