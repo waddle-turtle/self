@@ -41,8 +41,14 @@ def linebot(request):
         body_json = json.loads(body)
         
         # 驗證並處理 webhook
+        # 驗證並處理 webhook
         handler.handle(body, signature)
         
+        # ====== 加上這段：遇到 LINE Verify 空封包直接過關 ======
+        if not body_json.get("events"):
+            return "OK"
+        # ========================================================
+
         # 提取訊息和回覆 token
         msg = body_json["events"][0]["message"]["text"]
         tk = body_json["events"][0]["replyToken"]
