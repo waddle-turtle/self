@@ -60,7 +60,8 @@ def linebot(request):
                 wks = gc.open(config.GSPREADSHEET).worksheet_by_title(config.GWORKSHEET)
             except Exception as ex:
                 print("無法連線google sheet", ex)
-                sys.exit(1)
+                line_bot_api.reply_message(tk, TextSendMessage(text="資料庫連線異常，請稍後再試！"))
+                return "OK"
 
             bo = BotOperation(wks, line_bot_api, msg, tk, config)
             try:
@@ -74,7 +75,7 @@ def linebot(request):
     except Exception as ex:
         print(request.args)
         print(ex)
-        sys.exit(1)
+        return "Internal Server Error", 500
 
     return "OK"
 
