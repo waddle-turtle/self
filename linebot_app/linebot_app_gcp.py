@@ -42,12 +42,13 @@ def linebot(request):
         
         handler.handle(body, signature)
         
+        # 防呆機制：攔截 LINE Verify 的探測空封包
         if not body_json.get("events"):
             return "OK"
-     
+
+        # 擷取真實使用者的文字訊息與回覆金鑰
         msg = body_json["events"][0]["message"]["text"]
         tk = body_json["events"][0]["replyToken"]
-        print(msg, tk)
 
         if msg != "":
             try:
